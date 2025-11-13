@@ -10,7 +10,7 @@ true false null
 """.split())
 
 # Comentarios en Java (// y /* ... */)
-RE_COM = re.compile(r"//.?$|/\[\s\S]?\/", re.MULTILINE)
+RE_COM = re.compile(r"//.*?$|/\*[\s\S]*?\*/", re.MULTILINE)
 
 # Cadenas en Java ("" o '')
 RE_STR = re.compile(r"(['\"]).*?\1", re.DOTALL)
