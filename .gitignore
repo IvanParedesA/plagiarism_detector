@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.env
+.venv
+venv/
+env/
+
+# IDEs
+.vscode/
+.idea/
+
+# Datos y salidas
+outputs/
+data/*.log
+data/*.tmp
+
+# Mac
+.DS_Store
