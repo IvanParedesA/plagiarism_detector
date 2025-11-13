@@ -1,7 +1,7 @@
 import os
 import chardet
 
-DEFAULT_EXTS = {".py", ".c", ".cpp", ".java", ".js"}
+DEFAULT_EXTS = {".java"}
 
 def read_text(path, max_mb=2):
     if os.path.getsize(path) > max_mb * 1024 * 1024:
