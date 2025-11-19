@@ -1,71 +1,84 @@
-import re
+# src/preproc.py
 
-# Palabras reservadas de Java
+import re
+from typing import List
+
+# Palabras reservadas de Java (y algunas clases/miembros frecuentes)
 KW = set("""
 abstract assert boolean break byte case catch char class const continue default do
 double else enum extends final finally float for goto if implements import instanceof
 int interface long native new package private protected public return short static
 strictfp super switch synchronized this throw throws transient try void volatile while
 true false null
+String System out println
 """.split())
 
-# Comentarios en Java (// y /* ... */)
+# Comentarios en Java: // ... y /* ... */
 RE_COM = re.compile(r"//.*?$|/\*[\s\S]*?\*/", re.MULTILINE)
 
-# Cadenas en Java ("" o '')
-RE_STR = re.compile(r"(['\"]).*?\1", re.DOTALL)
+# Cadenas "..." o '...'
+RE_STR = re.compile(r'(".*?"|\'.*?\')', re.DOTALL)
 
-# Números (enteros o decimales simples)
+# Números (enteros o decimales)
 RE_NUM = re.compile(r"\b\d+(\.\d+)?\b")
 
-# Identificadores de Java
+# Identificadores (variables, clases, métodos)
 RE_ID = re.compile(r"\b([A-Za-z_$][A-Za-z_0-9$]*)\b")
 
 
-def normalize(code: str) -> str:
+def _tokenize(code: str) -> List[str]:
+    """
+    Tokenización sencilla:
+    - Palabras (\w+)
+    - Símbolos relevantes de Java: llaves, paréntesis, operadores sencillos, etc.
+    """
+    return re.findall(r"\b\w+\b|[{}();=+*\-/<>&|!%.,]", code)
+
+
+def normalize_java(code: str) -> str:
     """
     Normaliza código Java para análisis de similitud / plagio:
 
-    - Reemplaza cadenas por el token 'STR'
-    - Elimina comentarios (// y /* ... */)
-    - Reemplaza números por el token 'NUM'
-    - Reemplaza nombres de variables/métodos/clases por ID_1, ID_2, ...
-      (pero conserva palabras reservadas de Java y nombres TODO MAYÚSCULAS
-       que normalmente representan constantes)
-    - Compacta espacios en blanco en una sola línea limpia
+    - Remueve comentarios.
+    - Remueve/reemplaza strings por el token STR.
+    - Reemplaza números por el token NUM.
+    - Reemplaza identificadores no-keyword por el token ID (α-renaming ligero).
+    - Devuelve una secuencia de tokens lista para alimentar a TF-IDF
+      (por ejemplo, con tokenizer=str.split).
     """
 
-    # 1) Reemplazar todas las cadenas por 'STR'
-    code = RE_STR.sub("STR", code)
-
-    # 2) Eliminar comentarios
+    # 1) Quitar comentarios
     code = RE_COM.sub(" ", code)
 
-    # 3) Reemplazar números por 'NUM'
-    code = RE_NUM.sub("NUM", code)
+    # 2) Reemplazar strings por STR
+    code = RE_STR.sub(" STR ", code)
 
-    # Diccionario para mapear identificadores originales -> ID_n
-    ids = {}
+    # 3) Reemplazar números por NUM
+    code = RE_NUM.sub(" NUM ", code)
 
-    # Función para reemplazar cada identificador encontrado
-    def repl(m):
-        w = m.group(1)
+    # 4) Reemplazar identificadores no-keyword por ID
+    def repl_id(match: re.Match) -> str:
+        word = match.group(1)
+        if word in KW:
+            return word
+        return "ID"
 
-        # Si es palabra reservada de Java o está en mayúsculas, no lo cambiamos
-        if w in KW or w.isupper():
-            return w
+    code = RE_ID.sub(repl_id, code)
 
-        # Si es la primera vez que vemos este identificador, le asignamos un ID nuevo
-        if w not in ids:
-            ids[w] = f"ID_{len(ids) + 1}"
+    # 5) Tokenizar
+    tokens = _tokenize(code)
 
-        # Devolvemos el identificador normalizado
-        return ids[w]
+    # 6) Unir tokens con espacios (para que el TF-IDF trabaje sobre "palabras")
+    return " ".join(tokens)
 
-    # 4) Aplicar el reemplazo de identificadores
-    code = RE_ID.sub(repl, code)
 
-    # 5) Normalizar espacios en blanco y recortar extremos
-    code = re.sub(r"\s+", " ", code).strip()
-
-    return code
+def normalize_code(code: str, language: str = "java") -> str:
+    """
+    Punto de entrada genérico por si en el futuro quieres agregar otros lenguajes.
+    De momento solo soporta Java.
+    """
+    lang = language.lower()
+    if lang == "java":
+        return normalize_java(code)
+    # En el futuro podrías agregar: if lang == "python": ...
+    raise ValueError(f"Lenguaje no soportado para normalización: {language}")
