@@ -45,3 +45,29 @@ En su primera fase, el sistema genera una representación *TF-IDF* del código (
 
 ```bash
 pip install -r requirements.txt
+
+---
+
+## Ejecución del proyecto
+
+### 1. Ejecutar modelo TF-IDF + Coseno
+```bash
+python -m src.features_tfidf --input_dir data --output_dir outputs
+```
+
+### 2. Ejecutar modelo Jaccard (k-shingles)
+```bash
+python -m src.shingles_jaccard --input_dir data --output_dir outputs_jaccard
+```
+
+### 3. Ejecutar ensemble (combinación de modelos)
+```bash
+python -m src.ensemble_models \
+    --cosine_dir outputs \
+    --jaccard_dir outputs_jaccard \
+    --out_dir outputs_ensemble \
+    --cosine_thr 0.75 \
+    --jaccard_thr 0.5
+```
+
+Esto generará los reportes en las carpetas `outputs/`, `outputs_jaccard/` y `outputs_ensemble/`.

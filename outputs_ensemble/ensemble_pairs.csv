@@ -1,0 +1,4 @@
+pair_key,file_i,file_j,cosine,jaccard,vote_cosine,vote_jaccard,votes,decision,score_mean
+data/A.java||data/A_mod.java,data/A_mod.java,data/A.java,1.0000000000000009,1.0,1,1,2,1,1.0000000000000004
+data/A_mod.java||data/B.java,data/B.java,data/A_mod.java,0.8462838244909866,0.360655737704918,1,0,1,0,0.6034697810979524
+data/A.java||data/B.java,data/B.java,data/A.java,0.8462838244909866,0.360655737704918,1,0,1,0,0.6034697810979524
