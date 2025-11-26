@@ -27,7 +27,7 @@ RE_ID = re.compile(r"\b([A-Za-z_$][A-Za-z_0-9$]*)\b")
 
 
 def _tokenize(code: str) -> List[str]:
-    """
+    r"""
     Tokenización sencilla:
     - Palabras (\w+)
     - Símbolos relevantes de Java: llaves, paréntesis, operadores sencillos, etc.

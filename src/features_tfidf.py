@@ -48,6 +48,7 @@ def build_tfidf_matrix(texts: List[str]):
     vectorizer = TfidfVectorizer(
         analyzer="word",
         tokenizer=str.split,
+        token_pattern=None,
         lowercase=False,
         ngram_range=(1, 3),
         min_df=1,
