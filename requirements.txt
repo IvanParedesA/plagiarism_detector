@@ -5,3 +5,4 @@ scipy
 chardet
 matplotlib
 seaborn
+javalang
