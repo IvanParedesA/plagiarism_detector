@@ -45,6 +45,7 @@ En su primera fase, el sistema genera una representación *TF-IDF* del código (
 
 ```bash
 pip install -r requirements.txt
+```
 
 ---
 
@@ -60,14 +61,21 @@ python -m src.features_tfidf --input_dir data --output_dir outputs
 python -m src.shingles_jaccard --input_dir data --output_dir outputs_jaccard
 ```
 
-### 3. Ejecutar ensemble (combinación de modelos)
+### 3. Ejecutar modelo estructural AST
+```bash
+python -m src.ast_structural --input_dir data --output_dir outputs_ast --threshold 0.7
+```
+
+### 4. Ejecutar ensemble (combinación de modelos)
 ```bash
 python -m src.ensemble_models \
     --cosine_dir outputs \
     --jaccard_dir outputs_jaccard \
+    --ast_dir outputs_ast \
     --out_dir outputs_ensemble \
     --cosine_thr 0.75 \
-    --jaccard_thr 0.5
+    --jaccard_thr 0.5 \
+    --ast_thr 0.7
 ```
 
-Esto generará los reportes en las carpetas `outputs/`, `outputs_jaccard/` y `outputs_ensemble/`.
+Esto generará los reportes en las carpetas `outputs/`, `outputs_jaccard/`, `outputs_ast/` y `outputs_ensemble/`.
