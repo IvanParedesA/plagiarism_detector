@@ -66,16 +66,23 @@ python -m src.shingles_jaccard --input_dir data --output_dir outputs_jaccard
 python -m src.ast_structural --input_dir data --output_dir outputs_ast --threshold 0.7
 ```
 
-### 4. Ejecutar ensemble (combinación de modelos)
+### 4. Ejecutar modelo de similitud de secuencia (tokens)
+```bash
+python -m src.sequence_similarity --input_dir data --output_dir outputs_seq --threshold 0.8
+```
+
+### 5. Ejecutar ensemble (combinación de modelos)
 ```bash
 python -m src.ensemble_models \
     --cosine_dir outputs \
     --jaccard_dir outputs_jaccard \
     --ast_dir outputs_ast \
+    --seq_dir outputs_seq \
     --out_dir outputs_ensemble \
     --cosine_thr 0.75 \
     --jaccard_thr 0.5 \
-    --ast_thr 0.7
+    --ast_thr 0.7 \
+    --seq_thr 0.8
 ```
 
-Esto generará los reportes en las carpetas `outputs/`, `outputs_jaccard/`, `outputs_ast/` y `outputs_ensemble/`.
+Esto generará los reportes en las carpetas `outputs/`, `outputs_jaccard/`, `outputs_ast/`, `outputs_seq/` y `outputs_ensemble/`.
