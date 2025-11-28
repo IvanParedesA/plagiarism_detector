@@ -107,6 +107,9 @@ def export_reports(
     sospechosos_path = os.path.join(output_dir, f"sospechosos_{metric_name}.csv")
     df_susp.to_csv(sospechosos_path, index=False)
 
+    # Log número de pares sospechosos (para Streamlit y consola)
+    print(f"[TFIDF] Pares sospechosos encontrados: {len(df_susp)}")
+
 
 def run_tfidf_pipeline(
     input_dir: str = "data",
