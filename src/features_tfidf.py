@@ -108,7 +108,7 @@ def export_reports(
     df_susp.to_csv(sospechosos_path, index=False)
 
     # Log número de pares sospechosos (para Streamlit y consola)
-    print(f"[TFIDF] Pares sospechosos encontrados: {len(df_susp)}")
+    print(f"[TF-IDF] Pares sospechosos encontrados: {len(df_susp)}")
 
 
 def run_tfidf_pipeline(
