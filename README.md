@@ -51,24 +51,34 @@ pip install -r requirements.txt
 
 ## Ejecución del proyecto
 
+### 0. Ejecutar el pipeline completo (todos los modelos + ensemble)
+
+Puedes ejecutar todo el sistema de detección con un solo comando:
+
+```bash
+python run_detector.py --input datasets/IR-Plag-Dataset/case-01 --out outputs_case01
+```
+
+También puedes usar el botón **Run** de VSCode, ya que `run_detector.py` incluye valores por defecto para `--input` y `--out`.
+
 ### 1. Ejecutar modelo TF-IDF + Coseno
 ```bash
-python -m src.features_tfidf --input_dir data --output_dir outputs
+python -m src.features_tfidf --input_dir datasets/IR-Plag-Dataset/case-01 --output_dir outputs
 ```
 
 ### 2. Ejecutar modelo Jaccard (k-shingles)
 ```bash
-python -m src.shingles_jaccard --input_dir data --output_dir outputs_jaccard
+python -m src.shingles_jaccard --input_dir datasets/IR-Plag-Dataset/case-01 --output_dir outputs_jaccard
 ```
 
 ### 3. Ejecutar modelo estructural AST
 ```bash
-python -m src.ast_structural --input_dir data --output_dir outputs_ast --threshold 0.7
+python -m src.ast_structural --input_dir datasets/IR-Plag-Dataset/case-01 --output_dir outputs_ast --threshold 0.7
 ```
 
 ### 4. Ejecutar modelo de similitud de secuencia (tokens)
 ```bash
-python -m src.sequence_similarity --input_dir data --output_dir outputs_seq --threshold 0.8
+python -m src.sequence_similarity --input_dir datasets/IR-Plag-Dataset/case-01 --output_dir outputs_seq --threshold 0.8
 ```
 
 ### 5. Ejecutar ensemble (combinación de modelos)
@@ -86,3 +96,5 @@ python -m src.ensemble_models \
 ```
 
 Esto generará los reportes en las carpetas `outputs/`, `outputs_jaccard/`, `outputs_ast/`, `outputs_seq/` y `outputs_ensemble/`.
+
+También puedes ejecutar cualquier otro dataset cambiando únicamente la ruta en `--input_dir` o en el argumento `--input` de `run_detector.py`.
