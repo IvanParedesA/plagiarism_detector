@@ -17,6 +17,7 @@ env/
 outputs/
 data/*.log
 data/*.tmp
+datasets/
 
 # Mac
 .DS_Store
