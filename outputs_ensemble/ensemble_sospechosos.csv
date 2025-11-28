@@ -1,2 +1,0 @@
-pair_key,file_i,file_j,cosine,jaccard,ast_cosine,seq_sim,vote_cosine,vote_jaccard,vote_ast,vote_seq,votes,decision,score_mean
-data/A.java||data/A_mod.java,data/A_mod.java,data/A.java,1.0000000000000009,1.0,0.9999999999999996,1.0,1,1,1,1,4,1,1.0

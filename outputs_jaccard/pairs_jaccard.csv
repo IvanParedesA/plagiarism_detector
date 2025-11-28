@@ -1,4 +1,0 @@
-file_i,file_j,jaccard
-data/A_mod.java,data/A.java,1.0
-data/B.java,data/A_mod.java,0.36065573770491804
-data/B.java,data/A.java,0.36065573770491804
