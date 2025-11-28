@@ -14,10 +14,18 @@ env/
 .idea/
 
 # Datos y salidas
-outputs/
+outputs*/
+outputs_*/
+**/outputs*/
+**/outputs_*/
+
 data/*.log
 data/*.tmp
+
+# Ignorar datasets completos (pero permite agregar un README si quieres)
 datasets/
+datasets/**
+!datasets/README.md
 
 # Mac
 .DS_Store
