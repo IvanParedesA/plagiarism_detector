@@ -5,6 +5,8 @@ from pathlib import Path
 from datetime import datetime
 import re
 import pandas as pd
+import zipfile
+import time
 
 def parse_summary(stdout: str) -> dict:
     summary = {
@@ -71,15 +73,55 @@ Sube una carpeta con archivos `.java` (o usa uno de los datasets de ejemplo) y
 ejecuta todos los modelos de similitud para ver posibles casos sospechosos.
 """)
 
-# --- Inicializar estado ---
-if "run_info" not in st.session_state:
-    st.session_state.run_info = None  # aquí guardaremos logs y out_prefix
-
-# Inputs básicos
-input_dir = st.text_input(
-    "Carpeta de entrada",
-    value="datasets/IR-Plag-Dataset/case-01"
+# --- Selección de origen del dataset ---
+mode = st.radio(
+    "Origen del dataset",
+    ["Dataset de ejemplo", "Subir ZIP con archivos .java"],
+    index=0,
 )
+
+uploaded_zip = None
+
+if mode == "Dataset de ejemplo":
+    # Mapear etiquetas amigables a rutas reales
+    example_options = {
+        "Small example (demo rápido)": "datasets/data",
+        "IR-Plag - case-01": "datasets/IR-Plag-Dataset/case-01",
+        "IR-Plag - case-02": "datasets/IR-Plag-Dataset/case-02",
+        "IR-Plag - case-03": "datasets/IR-Plag-Dataset/case-03",
+        "IR-Plag - case-04": "datasets/IR-Plag-Dataset/case-04",
+        "IR-Plag - case-05": "datasets/IR-Plag-Dataset/case-05",
+        "IR-Plag - case-06": "datasets/IR-Plag-Dataset/case-06",
+        "IR-Plag - case-07": "datasets/IR-Plag-Dataset/case-07",
+        "IR-Plag - case-08": "datasets/IR-Plag-Dataset/case-08",
+        "IR-Plag - case-09": "datasets/IR-Plag-Dataset/case-09",
+        "IR-Plag - case-10": "datasets/IR-Plag-Dataset/case-10",
+        "IR-Plag completo (todos los cases)": "datasets/IR-Plag-Dataset",
+    }
+
+    selected_label = st.selectbox(
+        "Selecciona un dataset de ejemplo",
+        options=list(example_options.keys()),
+        index=0,
+    )
+
+    # Ruta por defecto según la opción elegida
+    default_input_dir = example_options[selected_label]
+
+    # Permitimos editar la ruta en caso de que el usuario quiera ajustar algo
+    input_dir = st.text_input(
+        "Carpeta de entrada",
+        value=default_input_dir,
+        help="Ruta en el servidor donde están los archivos .java del dataset.",
+    )
+else:
+    st.info(
+        "Sube un archivo .zip que contenga tus archivos .java. "
+        "El contenido se descomprimirá en el servidor y se analizará automáticamente."
+    )
+    uploaded_zip = st.file_uploader("Archivo ZIP", type=["zip"])
+    # En modo ZIP, la ruta real de entrada se calculará al descomprimir
+    input_dir = ""
 
 out_prefix = st.text_input(
     "Prefijo de salida",
@@ -88,21 +130,73 @@ out_prefix = st.text_input(
 
 # --- Botón para lanzar el análisis ---
 if st.button("Ejecutar análisis"):
-    with st.spinner("Corriendo análisis... esto puede tardar un poquito ⏳"):
-        result, summary = run_pipeline(input_dir, out_prefix)
+    effective_input_dir = None
 
-    # Guardamos en session_state para que no se pierda al hacer clic en otros botones
-    st.session_state.run_info = {
-        "input_dir": input_dir,
-        "out_prefix": out_prefix,
-        "stdout": result.stdout,
-        "stderr": result.stderr,
-        "summary": summary,
-        "run_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    }
+    # Determinar la carpeta de entrada según el modo
+    if mode == "Dataset de ejemplo":
+        effective_input_dir = input_dir
+    else:
+        # Modo ZIP: validar y descomprimir
+        if uploaded_zip is None:
+            st.error("Por favor sube un archivo ZIP con tus archivos .java antes de ejecutar el análisis.")
+        else:
+            uploads_root = Path("uploads")
+            uploads_root.mkdir(exist_ok=True)
+
+            raw_base_name = Path(uploaded_zip.name).stem
+            # Reemplazar espacios y caracteres raros por guiones bajos
+            base_name = re.sub(r'[^a-zA-Z0-9_-]+', '_', raw_base_name)
+
+            ts = int(time.time())
+            temp_zip_path = uploads_root / f"{base_name}_{ts}.zip"
+            extract_dir = uploads_root / f"{base_name}_{ts}"
+
+            # Guardar el ZIP en disco
+            with open(temp_zip_path, "wb") as f:
+                f.write(uploaded_zip.getbuffer())
+
+            # Descomprimir el ZIP
+            with zipfile.ZipFile(temp_zip_path, "r") as zf:
+                zf.extractall(extract_dir)
+
+            # Buscar archivos .java dentro de la carpeta extraída
+            java_files = list(Path(extract_dir).rglob("*.java"))
+
+            # Ignorar basura de macOS: carpeta __MACOSX y archivos que empiezan con "._"
+            java_files = [
+                p for p in java_files
+                if "__MACOSX" not in p.parts and not p.name.startswith("._")
+            ]
+
+            if not java_files:
+                st.error("No se encontraron archivos .java válidos dentro del ZIP. "
+                        "Verifica que el ZIP no esté vacío y que contenga archivos .java.")
+                effective_input_dir = None
+            else:
+                # Si todos los .java están en la misma carpeta, usamos esa como carpeta de entrada
+                parents = {p.parent for p in java_files}
+                if len(parents) == 1:
+                    effective_input_dir = str(next(iter(parents)))
+                else:
+                    # Si hay varias carpetas, usamos la raíz extraída
+                    effective_input_dir = str(extract_dir)
+
+    if effective_input_dir:
+        with st.spinner("Corriendo análisis... esto puede tardar un poquito ⏳"):
+            result, summary = run_pipeline(effective_input_dir, out_prefix)
+
+        # Guardamos en session_state para que no se pierda al hacer clic en otros botones
+        st.session_state.run_info = {
+            "input_dir": effective_input_dir,
+            "out_prefix": out_prefix,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "summary": summary,
+            "run_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
 
 # --- Mostrar resultados de la última corrida (si existe) ---
-run_info = st.session_state.run_info
+run_info = st.session_state.get("run_info", None)
 
 if run_info is not None:
     summary = run_info.get("summary", {}) or {}

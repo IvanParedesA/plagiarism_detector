@@ -22,10 +22,9 @@ outputs_*/
 data/*.log
 data/*.tmp
 
-# Ignorar datasets completos (pero permite agregar un README si quieres)
-datasets/
-datasets/**
-!datasets/README.md
+# Uploads from Streamlit (do not version)
+uploads/
+uploads/**
 
 # Mac
 .DS_Store
