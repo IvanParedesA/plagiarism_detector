@@ -39,9 +39,16 @@ def _load_pairs(csv_path: str, score_col: str, source_name: str) -> pd.DataFrame
             f"'file_i', 'file_j' y '{score_col}'."
         )
 
+    # 🔧 Normalizar rutas para que todas usen "/" (evita diferencias Win/Mac)
+    df["file_i"] = df["file_i"].astype(str).str.replace("\\", "/", regex=False)
+    df["file_j"] = df["file_j"].astype(str).str.replace("\\", "/", regex=False)
+
     def make_key(row):
         a, b = row["file_i"], row["file_j"]
-        return f"{min(a, b)}||{max(a, b)}"
+        # nos aseguramos de que el orden sea determinista
+        if a > b:
+            a, b = b, a
+        return f"{a}||{b}"
 
     df["pair_key"] = df.apply(make_key, axis=1)
     df["source"] = source_name
