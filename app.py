@@ -108,14 +108,19 @@ if run_info is not None:
     summary = run_info.get("summary", {}) or {}
     st.subheader("Resumen del análisis")
 
-    # Métricas rápidas
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
-    col1.metric("Dataset", Path(run_info["input_dir"]).name)
-    col2.metric("TF-IDF sospechosos", summary.get("tfidf_suspicious", "–"))
-    col3.metric("Jaccard sospechosos", summary.get("jaccard_suspicious", "–"))
-    col4.metric("AST sospechosos", summary.get("ast_suspicious", "–"))
-    col5.metric("Secuencia sospechosos", summary.get("seq_suspicious", "–"))
-    col6.metric("Pares sospechosos (ensemble)", summary.get("ensemble_suspicious", "–"))
+    # Mostrar el nombre completo del dataset arriba
+    dataset_name = Path(run_info["input_dir"]).name
+    st.markdown(f"<h3>Dataset analizado: <span style='color:#4CAF50;'>{dataset_name}</span></h3>", unsafe_allow_html=True)
+
+    st.markdown("")  # pequeño espacio
+
+    # Métricas rápidas (sin el dataset aquí para que tengan más espacio)
+    col1, col2, col3, col4, col5 = st.columns(5)
+    col1.metric("TF-IDF sospechosos", summary.get("tfidf_suspicious", "–"))
+    col2.metric("Jaccard sospechosos", summary.get("jaccard_suspicious", "–"))
+    col3.metric("AST sospechosos", summary.get("ast_suspicious", "–"))
+    col4.metric("Secuencia sospechosos", summary.get("seq_suspicious", "–"))
+    col5.metric("Pares sospechosos (ensemble)", summary.get("ensemble_suspicious", "–"))
 
     # Reporte en texto
     ensemble_susp = summary.get("ensemble_suspicious", "N/D")
