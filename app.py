@@ -177,11 +177,33 @@ Resultados por modelo:
             df = df[cols]
 
         st.subheader("Pares sospechosos (ensemble)")
-        st.dataframe(df)
+
+        # Renombrar columnas para que sean más legibles en la tabla y el CSV
+        rename_map = {
+            "file_a": "Archivo A",
+            "file_b": "Archivo B",
+            "file_i": "ID archivo A",
+            "file_j": "ID archivo B",
+            "cosine": "Similitud TF-IDF (coseno)",
+            "jaccard": "Similitud Jaccard (k-shingles)",
+            "ast_cosine": "Similitud estructural (AST)",
+            "seq_sim": "Similitud de secuencia",
+            "vote_cosine": "Voto TF-IDF",
+            "vote_jaccard": "Voto Jaccard",
+            "vote_ast": "Voto AST",
+            "vote_seq": "Voto Secuencia",
+            "votes": "Total de votos",
+            "decision": "Decisión final (1 = sospechoso)",
+            "score_mean": "Promedio de similitud",
+        }
+
+        df_display = df.rename(columns=rename_map)
+
+        st.dataframe(df_display)
 
         st.download_button(
             "Descargar CSV",
-            df.to_csv(index=False).encode("utf-8"),
+            df_display.to_csv(index=False).encode("utf-8"),
             file_name=f"{run_info['out_prefix']}_ensemble_sospechosos.csv",
             mime="text/csv",
         )
