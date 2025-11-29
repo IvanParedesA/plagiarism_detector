@@ -16,26 +16,26 @@ def run_pipeline(input_dir: str, out_prefix: str):
     ens_out     = f"{base_out}_ensemble"
 
     # 1. TF-IDF + Coseno
-    run(f"python -m src.features_tfidf --input_dir {base_in} --output_dir {tfidf_out}")
+    run(f'python -m src.features_tfidf --input_dir "{base_in}" --output_dir "{tfidf_out}"')
 
     # 2. Jaccard
-    run(f"python -m src.shingles_jaccard --input_dir {base_in} --output_dir {jaccard_out}")
+    run(f'python -m src.shingles_jaccard --input_dir "{base_in}" --output_dir "{jaccard_out}"')
 
     # 3. AST
-    run(f"python -m src.ast_structural --input_dir {base_in} --output_dir {ast_out}")
+    run(f'python -m src.ast_structural --input_dir "{base_in}" --output_dir "{ast_out}"')
 
     # 4. Secuencia de tokens
-    run(f"python -m src.sequence_similarity --input_dir {base_in} --output_dir {seq_out} --threshold 0.8")
+    run(f'python -m src.sequence_similarity --input_dir "{base_in}" --output_dir "{seq_out}" --threshold 0.8')
 
     # 5. Ensemble final
     run(
-        f"python -m src.ensemble_models "
-        f"--cosine_dir {tfidf_out} "
-        f"--jaccard_dir {jaccard_out} "
-        f"--ast_dir {ast_out} "
-        f"--seq_dir {seq_out} "
-        f"--out_dir {ens_out} "
-        f"--cosine_thr 0.75 --jaccard_thr 0.5 --ast_thr 0.7 --seq_thr 0.8"
+        f'python -m src.ensemble_models '
+        f'--cosine_dir "{tfidf_out}" '
+        f'--jaccard_dir "{jaccard_out}" '
+        f'--ast_dir "{ast_out}" '
+        f'--seq_dir "{seq_out}" '
+        f'--out_dir "{ens_out}" '
+        f'--cosine_thr 0.75 --jaccard_thr 0.5 --ast_thr 0.7 --seq_thr 0.8'
     )
 
     print("\n Pipeline completado exitosamente.")
