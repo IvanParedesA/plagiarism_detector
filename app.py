@@ -209,12 +209,16 @@ if run_info is not None:
     st.markdown("")  # pequeño espacio
 
     # Métricas rápidas (sin el dataset aquí para que tengan más espacio)
-    col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("TF-IDF sospechosos", summary.get("tfidf_suspicious", "–"))
-    col2.metric("Jaccard sospechosos", summary.get("jaccard_suspicious", "–"))
-    col3.metric("AST sospechosos", summary.get("ast_suspicious", "–"))
-    col4.metric("Secuencia sospechosos", summary.get("seq_suspicious", "–"))
-    col5.metric("Pares sospechosos (ensemble)", summary.get("ensemble_suspicious", "–"))
+    # Primera fila de métricas
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("TF‑IDF – pares sospechosos", summary.get("tfidf_suspicious", "–"))
+    c2.metric("Jaccard – pares sospechosos", summary.get("jaccard_suspicious", "–"))
+    c3.metric("AST estructural – pares sospechosos", summary.get("ast_suspicious", "–"))
+    c4.metric("Secuencia – pares sospechosos", summary.get("seq_suspicious", "–"))
+
+    # Segunda fila para ensemble
+    c5 = st.columns(1)[0]
+    c5.metric("Pares sospechosos (ensemble)", summary.get("ensemble_suspicious", "–"))
 
     # Reporte en texto
     ensemble_susp = summary.get("ensemble_suspicious", "N/D")
@@ -246,6 +250,9 @@ Resultados por modelo:
         file_name=f"{run_info['out_prefix']}_reporte.txt",
         mime="text/plain",
     )
+
+    with st.expander("Ver contenido del reporte (vista previa)"):
+        st.code(report_text)
 
     with st.expander("Ver log completo de ejecución"):
         st.code(run_info["stdout"] or "(sin salida stdout)")
