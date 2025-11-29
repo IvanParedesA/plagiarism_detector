@@ -167,46 +167,61 @@ Resultados por modelo:
         st.success(f"Pipeline completado. Leyendo: {csv_path}")
         df = pd.read_csv(csv_path)
 
-        # Hacer el CSV más legible: separar el par de archivos
-        if "pair_key" in df.columns:
-            files = df["pair_key"].str.split("|", n=1, expand=True)
-            df["file_a"] = files[0].apply(lambda p: Path(p).name if isinstance(p, str) else p)
-            df["file_b"] = files[1].apply(lambda p: Path(p).name if isinstance(p, str) else p)
+        # Si el CSV está vacío, avisamos y evitamos hacer split de pair_key
+        if df.empty:
+            st.info("No se encontraron pares sospechosos en el ensemble (votes >= 3).")
+        else:
+            # Separar el par de archivos si existe la columna pair_key
+            if "pair_key" in df.columns:
+                files = df["pair_key"].astype(str).str.split("|", n=1, expand=True)
 
-            cols = ["file_a", "file_b"] + [c for c in df.columns if c not in ["pair_key", "file_a", "file_b"]]
-            df = df[cols]
+                # Asegurarnos de que se generaron al menos 2 columnas
+                if files.shape[1] >= 2:
+                    df["file_a"] = files[0].apply(
+                        lambda p: Path(p).name if isinstance(p, str) else p
+                    )
+                    df["file_b"] = files[1].apply(
+                        lambda p: Path(p).name if isinstance(p, str) else p
+                    )
 
-        st.subheader("Pares sospechosos (ensemble)")
+                    # Reordenar columnas para mostrar file_a y file_b al inicio
+                    cols = ["file_a", "file_b"] + [
+                        c for c in df.columns
+                        if c not in ["pair_key", "file_a", "file_b"]
+                    ]
+                    df = df[cols]
 
-        # Renombrar columnas para que sean más legibles en la tabla y el CSV
-        rename_map = {
-            "file_a": "Archivo A",
-            "file_b": "Archivo B",
-            "file_i": "ID archivo A",
-            "file_j": "ID archivo B",
-            "cosine": "Similitud TF-IDF (coseno)",
-            "jaccard": "Similitud Jaccard (k-shingles)",
-            "ast_cosine": "Similitud estructural (AST)",
-            "seq_sim": "Similitud de secuencia",
-            "vote_cosine": "Voto TF-IDF",
-            "vote_jaccard": "Voto Jaccard",
-            "vote_ast": "Voto AST",
-            "vote_seq": "Voto Secuencia",
-            "votes": "Total de votos",
-            "decision": "Decisión final (1 = sospechoso)",
-            "score_mean": "Promedio de similitud",
-        }
+            st.subheader("Pares sospechosos (ensemble)")
 
-        df_display = df.rename(columns=rename_map)
+            # Renombrado de columnas para mayor claridad
+            rename_map = {
+                "file_a": "Archivo A",
+                "file_b": "Archivo B",
+                "file_i": "ID archivo A",
+                "file_j": "ID archivo B",
+                "cosine": "Similitud TF-IDF (coseno)",
+                "jaccard": "Similitud Jaccard (k-shingles)",
+                "ast_cosine": "Similitud estructural (AST)",
+                "seq_sim": "Similitud de secuencia",
+                "vote_cosine": "Voto TF-IDF",
+                "vote_jaccard": "Voto Jaccard",
+                "vote_ast": "Voto AST",
+                "vote_seq": "Voto Secuencia",
+                "votes": "Total de votos",
+                "decision": "Decisión final (1 = sospechoso)",
+                "score_mean": "Promedio de similitud",
+            }
 
-        st.dataframe(df_display)
+            df_display = df.rename(columns=rename_map)
 
-        st.download_button(
-            "Descargar CSV",
-            df_display.to_csv(index=False).encode("utf-8"),
-            file_name=f"{run_info['out_prefix']}_ensemble_sospechosos.csv",
-            mime="text/csv",
-        )
+            st.dataframe(df_display)
+
+            st.download_button(
+                "Descargar CSV",
+                df_display.to_csv(index=False).encode("utf-8"),
+                file_name=f"{run_info['out_prefix']}_ensemble_sospechosos.csv",
+                mime="text/csv",
+            )
     else:
         st.error(f"No encontré {csv_path}. Revisa las rutas de salida.")
 else:
