@@ -66,7 +66,7 @@ def run_pipeline(input_dir: str, out_prefix: str):
     summary = parse_summary(result.stdout or "")
     return result, summary
 
-st.title("Plagiarism Detector 💻📚")
+st.title("Plagiarism Detector")
 
 st.markdown("""
 Sube una carpeta con archivos `.java` (o usa uno de los datasets de ejemplo) y 
@@ -182,7 +182,7 @@ if st.button("Ejecutar análisis"):
                     effective_input_dir = str(extract_dir)
 
     if effective_input_dir:
-        with st.spinner("Corriendo análisis... esto puede tardar un poquito ⏳"):
+        with st.spinner("Corriendo análisis... esto puede tardar un poco"):
             result, summary = run_pipeline(effective_input_dir, out_prefix)
 
         # Guardamos en session_state para que no se pierda al hacer clic en otros botones
