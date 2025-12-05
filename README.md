@@ -1,90 +1,94 @@
 # Sistema de Detección de Similitud en Código Fuente
 
-Este proyecto implementa un sistema para apoyar la detección de posibles infracciones de derechos de autor en programas de computadora, combinando:
-
-- *Compiladores* (análisis léxico/sintáctico, normalización y estructura del código),
-- *Inteligencia Artificial* (representaciones vectoriales y modelos supervisados),
-- *Métodos Cuantitativos* (métricas de similitud, umbrales y sistemas de votación).
-
-En su primera fase, el sistema genera una representación *TF-IDF* del código (usando `TfidfVectorizer` de Scikit-Learn) y calcula la similitud mediante *cosine similarity*, produciendo un puntaje objetivo entre cada par de archivos.
+Este proyecto implementa un sistema completo para analizar similitud en programas escritos en Java. Combina técnicas de procesamiento de código, métricas cuantitativas y un sistema de votación basado en múltiples modelos. El objetivo es apoyar la detección de posibles casos de plagio, reutilización no autorizada o similitud anómala entre archivos fuente.
 
 ---
 
-## Características principales
+## Modelos incluidos en el sistema
 
-- Limpieza y normalización del código (comentarios, strings, identificadores).
-- Extracción de características mediante TF-IDF.
-- Cálculo de similitud numérica entre archivos.
-- Generación de reportes:
-  - Matriz de similitud
-  - CSV de pares sospechosos
-- Arquitectura preparada para integrar más modelos:
-  - Jaccard sobre k-shingles  
-  - Similitud estructural mediante AST  
-  - Clasificadores supervisados (LogReg / MLP)  
-  - Sistemas de votación (majority / weighted)
+El sistema utiliza cuatro enfoques complementarios para medir similitud:
+
+### 1. TF‑IDF + Similitud del Coseno
+Convierte cada archivo en un vector TF‑IDF usando `TfidfVectorizer` y compara pares mediante similitud del coseno. Permite capturar similitud textual general después de limpiar y normalizar el código.
+
+### 2. Jaccard con k‑shingles
+Fragmenta cada archivo en shingles (subcadenas de longitud fija). Compara conjuntos de shingles para obtener una medida de similitud mediante el índice de Jaccard. Es útil para detectar reordenamientos o modificaciones menores.
+
+### 3. Similitud estructural mediante AST
+Genera el Abstract Syntax Tree (AST) de cada archivo y extrae una representación estructural. La similitud se calcula comparando las estructuras internas de los programas.
+
+### 4. Similitud de Secuencia (Tokens)
+Convierte cada archivo en una secuencia de tokens y calcula la similitud utilizando medidas basadas en coincidencia parcial y alineamiento de secuencias. Permite detectar cambios leves conservando patrones lógicos.
+
+### Ensemble de modelos
+Combina los cuatro métodos usando un sistema de votación configurable. Un par de archivos se considera sospechoso si supera el número mínimo de votos definidos por el usuario.
 
 ---
 
 ## Estructura del proyecto
 
 - **src/**
-  - `io_loader.py`: lectura de archivos desde carpetas.
-  - `preproc.py`: limpieza y normalización del código.
-  - `features_tfidf.py`: construcción de la matriz TF-IDF.
-  - `ensemble.py`: cálculo de similitud y futura votación multimodelo.
-  - `cli.py`: punto de entrada por línea de comandos.
-
-- **data/**: ejemplos de código a analizar.  
-- **outputs/**: reportes generados (matrices y CSV).  
-- **docs/**: documentación del diseño y notas del reto.
+  - `features_tfidf.py` — Modelo TF‑IDF.
+  - `shingles_jaccard.py` — Modelo Jaccard con k‑shingles.
+  - `ast_structural.py` — Modelo estructural basado en AST.
+  - `sequence_similarity.py` — Modelo de similitud de secuencia.
+  - `ensemble_models.py` — Combinación de modelos y votación.
+  - `io_loader.py`, `preproc.py` — Utilidades de lectura y normalización.
+- **run_detector.py** — Ejecuta el pipeline completo.
+- **datasets/** — Conjunto de datos de ejemplo (incluye IR‑Plag y un dataset pequeño).
+- **outputs/** — Carpetas generadas por los modelos.
+- **app.py** — Interfaz en Streamlit.
 
 ---
 
 ## Requisitos
 
-```bash
+Instalar dependencias:
+
+```
 pip install -r requirements.txt
 ```
 
 ---
 
-## Ejecución del proyecto
+## Ejecución del sistema
 
-### 0. Ejecutar el pipeline completo (todos los modelos + ensemble)
+### Ejecutar todo el pipeline con un solo comando
 
-Puedes ejecutar todo el sistema de detección con un solo comando:
-
-```bash
+```
 python run_detector.py --input datasets/IR-Plag-Dataset/case-01 --out outputs_case01
 ```
 
-También puedes usar el botón **Run** de VSCode, ya que `run_detector.py` incluye valores por defecto para `--input` y `--out`.
+Si no se especifican parámetros, `run_detector.py` utilizará rutas por defecto. También puede ejecutarse directamente desde el botón *Run* en VSCode.
 
-### 1. Ejecutar modelo TF-IDF + Coseno
-```bash
-python -m src.features_tfidf --input_dir datasets/IR-Plag-Dataset/case-01 --output_dir outputs
+---
+
+## Ejecución de cada modelo por separado
+
+### 1. TF‑IDF + Coseno
+```
+python -m src.features_tfidf --input_dir datasets/IR-Plag-Dataset/case-01 --output_dir outputs_tfidf
 ```
 
-### 2. Ejecutar modelo Jaccard (k-shingles)
-```bash
+### 2. Jaccard (k‑shingles)
+```
 python -m src.shingles_jaccard --input_dir datasets/IR-Plag-Dataset/case-01 --output_dir outputs_jaccard
 ```
 
-### 3. Ejecutar modelo estructural AST
-```bash
+### 3. AST estructural
+```
 python -m src.ast_structural --input_dir datasets/IR-Plag-Dataset/case-01 --output_dir outputs_ast --threshold 0.7
 ```
 
-### 4. Ejecutar modelo de similitud de secuencia (tokens)
-```bash
+### 4. Similitud de Secuencia (Tokens)
+```
 python -m src.sequence_similarity --input_dir datasets/IR-Plag-Dataset/case-01 --output_dir outputs_seq --threshold 0.8
 ```
 
-### 5. Ejecutar ensemble (combinación de modelos)
-```bash
+### 5. Ensemble (votación)
+```
 python -m src.ensemble_models \
-    --cosine_dir outputs \
+    --cosine_dir outputs_tfidf \
     --jaccard_dir outputs_jaccard \
     --ast_dir outputs_ast \
     --seq_dir outputs_seq \
@@ -95,6 +99,39 @@ python -m src.ensemble_models \
     --seq_thr 0.8
 ```
 
-Esto generará los reportes en las carpetas `outputs/`, `outputs_jaccard/`, `outputs_ast/`, `outputs_seq/` y `outputs_ensemble/`.
+---
 
-También puedes ejecutar cualquier otro dataset cambiando únicamente la ruta en `--input_dir` o en el argumento `--input` de `run_detector.py`.
+## Uso en Streamlit
+
+El proyecto incluye una interfaz en `app.py`.
+
+```
+streamlit run app.py
+```
+
+La aplicación permite:
+
+- Ejecutar el pipeline completo.
+- Procesar datasets locales o cargar archivos ZIP.
+- Visualizar resultados por modelo.
+- Descargar los reportes generados.
+
+---
+
+## Datasets incluidos
+
+### IR‑Plag Dataset
+Fuente: https://github.com/oscarkarnalim/sourcecodeplagiarismdataset  
+Incluye múltiples casos organizados por niveles de transformación.
+
+### small_example
+Dataset pequeño para pruebas rápidas.
+
+---
+
+## Notas finales
+
+- El sistema está diseñado para ser extensible con modelos supervisados.
+- El ensemble permite ajustar umbrales y estrategias de decisión.
+- Todos los reportes se guardan en carpetas generadas automáticamente.
+
